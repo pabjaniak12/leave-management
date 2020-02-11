@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace leave_management.Controllers
 {
+    using Microsoft.AspNetCore.Authorization;
+
+    [Authorize(Roles = "Administrator")]
     public class LeaveTypesController : Controller
     {
         private ILeaveTypeRepository _repo;
@@ -18,33 +21,33 @@ namespace leave_management.Controllers
 
         public LeaveTypesController(ILeaveTypeRepository repo, IMapper mapper)
         {
-            _repo = repo;
-            _mapper = mapper;
+            this._repo = repo;
+            this._mapper = mapper;
         }
         // GET: LeaveTypes
         public ActionResult Index()
         {
-            var leaveTypes = _repo.FindAll().ToList();
-            var model = _mapper.Map<List<LeaveType>, List<LeaveTypeViewModel>>(leaveTypes);
-            return View(model);
+            var leaveTypes = this._repo.FindAll().ToList();
+            var model = this._mapper.Map<List<LeaveType>, List<LeaveTypeViewModel>>(leaveTypes);
+            return this.View(model);
         }
 
         // GET: LeaveTypes/Details/5
         public ActionResult Details(int id)
         {
-            if (!_repo.isExists(id))
+            if (!this._repo.isExists(id))
             {
-                return NotFound();
+                return this.NotFound();
             }
-            var leaveType = _repo.FindById(id);
-            var model = _mapper.Map<LeaveTypeViewModel>(leaveType);
-            return View(model);
+            var leaveType = this._repo.FindById(id);
+            var model = this._mapper.Map<LeaveTypeViewModel>(leaveType);
+            return this.View(model);
         }
 
         // GET: LeaveTypes/Create
         public ActionResult Create()
         {
-            return View();
+            return this.View();
         }
 
         // POST: LeaveTypes/Create
@@ -55,42 +58,42 @@ namespace leave_management.Controllers
             try
             {
                 // TODO: Add insert logic here
-                if (!ModelState.IsValid)
+                if (!this.ModelState.IsValid)
                 {
-                    return View(model);
+                    return this.View(model);
                 }
 
-                var leaveType = _mapper.Map<LeaveType>(model);
+                var leaveType = this._mapper.Map<LeaveType>(model);
                 leaveType.DateCreated = DateTime.Now;
-                var isSuccess = _repo.Create(leaveType);
+                var isSuccess = this._repo.Create(leaveType);
 
                 if (!isSuccess)
                 {
-                    ModelState.AddModelError("", "Something went wrong...");
-                    return View(model);
+                    this.ModelState.AddModelError("", "Something went wrong...");
+                    return this.View(model);
                 }
 
-                return RedirectToAction(nameof(Index));
+                return this.RedirectToAction(nameof(this.Index));
             }
             catch
             {
                 ModelState.AddModelError("", "Something went wrong..."); 
-                return View();
+                return this.View();
             }
         }
 
         // GET: LeaveTypes/Edit/5
         public ActionResult Edit(int id)
         {
-            if (!_repo.isExists(id))
+            if (!this._repo.isExists(id))
             {
-                return NotFound();
+                return this.NotFound();
             }
 
-            var leaveType = _repo.FindById(id);
-            var model = _mapper.Map<LeaveTypeViewModel>(leaveType);
+            var leaveType = this._repo.FindById(id);
+            var model = this._mapper.Map<LeaveTypeViewModel>(leaveType);
 
-            return View(model);
+            return this.View(model);
         }
 
         // POST: LeaveTypes/Edit/5
@@ -101,43 +104,43 @@ namespace leave_management.Controllers
             try
             {
                 // TODO: Add update logic here
-                if (!ModelState.IsValid)
+                if (!this.ModelState.IsValid)
                 {
-                    return View(model);
+                    return this.View(model);
                 }
 
-                var leaveType = _mapper.Map<LeaveType>(model);
-                var isSuccess = _repo.Update(leaveType);
+                var leaveType = this._mapper.Map<LeaveType>(model);
+                var isSuccess = this._repo.Update(leaveType);
                 if (!isSuccess)
                 {
-                    ModelState.AddModelError("", "Something went wrong...");
-                    return View(model);
+                    this.ModelState.AddModelError("", "Something went wrong...");
+                    return this.View(model);
                 }
-                return RedirectToAction(nameof(Index));
+                return this.RedirectToAction(nameof(this.Index));
             }
             catch
             {
-                ModelState.AddModelError("", "Something went wrong...");
-                return View();
+                this.ModelState.AddModelError("", "Something went wrong...");
+                return this.View();
             }
         }
 
         // GET: LeaveTypes/Delete/5
         public ActionResult Delete(int id)
         {
-            var leaveType = _repo.FindById(id);
+            var leaveType = this._repo.FindById(id);
             if (leaveType == null)
             {
-                return NotFound();
+                return this.NotFound();
             }
 
-            var isSuccess = _repo.Delete(leaveType);
+            var isSuccess = this._repo.Delete(leaveType);
             if (!isSuccess)
             {
-                return BadRequest();
+                return this.BadRequest();
             }
             
-            return RedirectToAction(nameof(Index));
+            return this.RedirectToAction(nameof(this.Index));
         }
 
         // POST: LeaveTypes/Delete/5
@@ -148,24 +151,24 @@ namespace leave_management.Controllers
             try
             {
                 // TODO: Add delete logic here
-                var leaveType = _repo.FindById(id);
+                var leaveType = this._repo.FindById(id);
 
 
                 if(leaveType == null)
                 {
-                    return NotFound();
+                    return this.NotFound();
                 }
-                var isSuccess = _repo.Delete(leaveType);
+                var isSuccess = this._repo.Delete(leaveType);
                 if (!isSuccess)
                 {
-                    return View(model);
+                    return this.View(model);
                 }
 
-                return RedirectToAction(nameof(Index));
+                return this.RedirectToAction(nameof(this.Index));
             }
             catch
             {
-                return View(model);
+                return this.View(model);
             }
         }
     }
