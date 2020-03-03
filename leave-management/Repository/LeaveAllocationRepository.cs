@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace leave_management.Repository
 {
@@ -19,7 +20,15 @@ namespace leave_management.Repository
         public bool CheckAllocation(int leaveTypeId, string EmployeeId)
         {
             var period = DateTime.Now.Year;
-            return FindAll().Where(q => q.EmployeeId == EmployeeId && q.LeaveTypeId == leaveTypeId && q.Period == period).Any;
+            return FindAll().Where(q => q.EmployeeId == EmployeeId && q.LeaveTypeId == leaveTypeId && q.Period == period).Any();
+        }
+
+        public ICollection<LeaveAllocation> GetLeaveAllocationsByEmployee(string id)
+        {
+            var period = DateTime.Now.Year;
+            return FindAll()
+                .Where(q => q.EmployeeId == id && q.Period == period)
+                .ToList();
         }
 
         public bool Create(LeaveAllocation entity)
@@ -36,12 +45,18 @@ namespace leave_management.Repository
 
         public ICollection<LeaveAllocation> FindAll()
         {
-            return _db.LeaveAllocations.ToList();
+            return _db.LeaveAllocations
+                .Include(q => q.LeaveType)
+                .Include(q => q.Employee)
+                .ToList();
         }
 
         public LeaveAllocation FindById(int id)
         {
-            return _db.LeaveAllocations.Find(id);
+            return _db.LeaveAllocations
+                .Include(q => q.LeaveType)
+                .Include(q => q.Employee)
+                .FirstOrDefault(q => q.Id == id);
         }
 
         public bool isExists(int id)

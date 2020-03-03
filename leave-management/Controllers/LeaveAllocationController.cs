@@ -7,6 +7,7 @@ using leave_management.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace leave_management.Controllers
 {
@@ -20,9 +21,9 @@ namespace leave_management.Controllers
         private readonly ILeaveTypeRepository _leaveRepo;
         private readonly ILeaveAllocationRepository _leaveAllocationRepo;
         private readonly IMapper _mapper;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<Employee> _userManager;
 
-        public LeaveAllocationController(ILeaveTypeRepository leaveRepo, ILeaveAllocationRepository allocationRepo, IMapper mapper, UserManager<IdentityUser> userManager)
+        public LeaveAllocationController(ILeaveTypeRepository leaveRepo, ILeaveAllocationRepository allocationRepo, IMapper mapper, UserManager<Employee> userManager)
         {
             this._leaveAllocationRepo = allocationRepo;
             this._leaveRepo = leaveRepo;
@@ -65,10 +66,24 @@ namespace leave_management.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: LeaveAllocation/Details/5
-        public ActionResult Details(int id)
+        public ActionResult ListEmployees()
         {
-            return View();
+            var employees = _userManager.GetUsersInRoleAsync("Employee").Result;
+            var model = _mapper.Map<List<EmployeeViewModel>>(employees);
+            return View(model);
+        }
+
+        // GET: LeaveAllocation/Details/5
+        public ActionResult Details(string id)
+        {
+            var employee = _mapper.Map<EmployeeViewModel>(_userManager.FindByIdAsync(id).Result);
+            var allocations = _mapper.Map<List<LeaveAllocationViewModel>>(_leaveAllocationRepo.GetLeaveAllocationsByEmployee(id));
+            var model = new ViewAllocationViewModel
+            {
+                Employee = employee,
+                LeaveAllocations = allocations
+            };
+            return View(model);
         }
 
         // GET: LeaveAllocation/Create
@@ -97,19 +112,34 @@ namespace leave_management.Controllers
         // GET: LeaveAllocation/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            var leaveAllocation = _leaveAllocationRepo.FindById(id);
+            var model = _mapper.Map<EditLeaveAllocationViewModel>(leaveAllocation);
+            return View(model);
         }
 
         // POST: LeaveAllocation/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(EditLeaveAllocationViewModel model)
         {
             try
             {
-                // TODO: Add update logic here
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
 
-                return RedirectToAction(nameof(Index));
+                var record = _leaveAllocationRepo.FindById(model.Id);
+                record.NumberOfDays = model.NumberOfDays;
+
+                var isSuccess = _leaveAllocationRepo.Update(record);
+                if (!isSuccess)
+                {
+                    ModelState.AddModelError("", "Error while saving");
+                    return View(model);
+                }
+
+                return RedirectToAction(nameof(Details), new {id = model.EmployeeId});
             }
             catch
             {
